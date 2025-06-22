@@ -5,17 +5,15 @@ from PIL import Image
 import os
 from datetime import datetime
 
-from model_def import Generator  # Your generator architecture
+from model_def import Generator  # import your Generator architecture
 
 device = torch.device('cpu')
 
 @st.cache_resource
 def load_model():
-    gen = Generator()
-    gen.load_state_dict(torch.load('model/my_model.pth', map_location=device))
-    gen.to(device)
-    gen.eval()
-    return gen
+    model = torch.load('model/my_model.pth', map_location=device)
+    model.eval()
+    return model
 
 generator = load_model()
 
@@ -25,10 +23,8 @@ def generate_digit_images(digit, count=5):
     for i in range(count):
         input_label = torch.zeros(1, 10, device=device)
         input_label[0, digit] = 1
-
         with torch.no_grad():
             generated_image = generator(input_label).cpu()
-
         filename = f'generated/{digit}_{i}_{datetime.now().timestamp()}.png'
         save_image(generated_image, filename)
         images.append(filename)
@@ -46,3 +42,4 @@ if st.button("Generate"):
         cols = st.columns(5)
         for col, path in zip(cols, image_paths):
             col.image(Image.open(path), caption=f"Digit {digit}", use_column_width=True)
+
