@@ -5,13 +5,14 @@ from PIL import Image
 import os
 from datetime import datetime
 
-from model_def import Generator  # import your Generator architecture
+from model_def import Generator  # Import your model architecture
 
 device = torch.device('cpu')
 
 @st.cache_resource
 def load_model():
-    model = torch.load('model/my_model.pth', map_location=device)
+    model = Generator()
+    model.load_state_dict(torch.load('model/my_model.pth', map_location=device))
     model.eval()
     return model
 
@@ -42,4 +43,3 @@ if st.button("Generate"):
         cols = st.columns(5)
         for col, path in zip(cols, image_paths):
             col.image(Image.open(path), caption=f"Digit {digit}", use_column_width=True)
-
