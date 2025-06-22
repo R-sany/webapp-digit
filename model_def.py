@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-class CNNGenerator(nn.Module):
+class Generator(nn.Module):
     def __init__(self):
         super(CNNGenerator, self).__init__()
         self.fc1 = nn.Linear(10, 256)
