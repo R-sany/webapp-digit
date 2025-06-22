@@ -1,16 +1,48 @@
 import streamlit as st
-from generate_digits import generate_digit_images
+import torch
+from torchvision.utils import save_image
 from PIL import Image
+import os
+from datetime import datetime
 
-st.set_page_config(page_title="Digit Generator", layout="centered")
+from model_def import Generator  # Your generator architecture
+
+device = torch.device('cpu')
+
+@st.cache_resource
+def load_model():
+    gen = Generator()
+    gen.load_state_dict(torch.load('model/my_model.pth', map_location=device))
+    gen.to(device)
+    gen.eval()
+    return gen
+
+generator = load_model()
+
+def generate_digit_images(digit, count=5):
+    os.makedirs('generated', exist_ok=True)
+    images = []
+    for i in range(count):
+        input_label = torch.zeros(1, 10, device=device)
+        input_label[0, digit] = 1
+
+        with torch.no_grad():
+            generated_image = generator(input_label).cpu()
+
+        filename = f'generated/{digit}_{i}_{datetime.now().timestamp()}.png'
+        save_image(generated_image, filename)
+        images.append(filename)
+    return images
+
 st.title("🧠 Handwritten Digit Generator")
 
-digit = st.selectbox("Select a digit (0–9):", list(range(10)))
+digit = st.selectbox("Select a digit (0-9):", list(range(10)))
 
 if st.button("Generate"):
     with st.spinner("Generating images..."):
         image_paths = generate_digit_images(digit)
         st.success(f"Generated {len(image_paths)} images of digit {digit}")
+
         cols = st.columns(5)
         for col, path in zip(cols, image_paths):
             col.image(Image.open(path), caption=f"Digit {digit}", use_column_width=True)
